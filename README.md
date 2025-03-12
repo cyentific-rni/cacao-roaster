@@ -1,31 +1,17 @@
-<img src="/artwork/CACAO-Roaster-logo.jpg" alt="CACAO Roaster logo" width="400"/>
+# NG-SOAR - Next Generation SOAR
 
-[![pages-build-deployment](https://github.com/opencybersecurityalliance/cacao-roaster/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages)](https://github.com/opencybersecurityalliance/cacao-roaster/actions/workflows/pages/pages-build-deployment)
-
-**Online Instance:** https://opencybersecurityalliance.github.io/cacao-roaster/
-# CACAO Roaster Sub-Project
-
-CACAO Roaster is a sub-project of the Open Cybersecurity Alliance. It is a web application for generating, parsing and validating, manipulating, and visualizing CACAO v2.0 playbooks.
+NG-SOAR is a web application for generating, parsing and validating, manipulating, and visualizing CACAO v2.0 playbooks.
 
 # Table of contents
 
-- [CACAO Roaster Sub-Project](#cacao-roaster-sub-project)
 - [Table of contents](#table-of-contents)
 - [Introduction](#introduction)
   - [Project status](#project-status)
-  - [Integration with other existing OCA or OASIS projects](#integration-with-other-existing-oca-or-oasis-projects)
   - [Screenshots of the application](#screenshots-of-the-application)
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Deployment](#deployment)
-  - [Contributing](#contributing)
-  - [Maintainers](#maintainers)
-  - [Support](#support)
-    - [Sign up for our mailing list](#sign-up-for-our-mailing-list)
-    - [Join us on Slack](#join-us-on-slack)
-  - [License](#license)
-- [Governance](#governance)
-- [CLA \& Non-assert signatures required](#cla--non-assert-signatures-required)
+  - [Tool Owners](#tool-owners)
 
 # Introduction
 
@@ -48,9 +34,6 @@ To use that integration, you need to have a running instance of SOARCA and confi
 Itegration with CACAO Executor - SOARCA.
 ![Itegration with CACAO Executor - SOARCA.](/artwork/CACAO-Roaster-Integraion.png)
 
-## Integration with other existing OCA or OASIS projects
-
-CACAO, STIX, OpenC2
 
 ## Screenshots of the application
 
@@ -110,35 +93,7 @@ docker build -t cacao-roaster .
 docker run -it -p 3000:3000 cacao-roaster
 ```
 
-## Contributing
-
-Add a brief explanation of what kind of contributions you are looking for and what your requirements are for accepting them. Add a link to [CONTRIBUTING.md](/CONTRIBUTING.md) and a link to [CODE_OF_CONDUCT](link to your code_of_conduct.md file).
-
-## Maintainers
+## Tool Owners - Cynetific AS
 
 * Mateusz Zych: [https://github.com/mateusdz](https://github.com/mateusdz)
 * Vasileios Mavroeidis: [https://github.com/Vasileios-Mavroeidis](https://github.com/Vasileios-Mavroeidis)
-
-## Support
-
-Where can people ask for help: this can be any combination of an issue tracker, Slack, a chat room, an email address, etc.
-
-### Sign up for our mailing list
-
-Stay up to date on meetings, announcements and other discussions with the [CACAO Roaster mailing list](https://lists.oasis-open-projects.org/g/oca-cacao-roaster). To subscribe, send an empty email to [oca-cacao-roaster+subscribe@lists.oasis-open-projects.org](mailto:oca-cacao-roaster+subscribe@lists.oasis-open-projects.org).
-
-### Join us on Slack
-
-CACAO Roaste has a Slack channel on the OCA Slack. [Join here](https://join.slack.com/t/open-cybersecurity/shared_invite/zt-1jsgt1053-oYsfBPXXChhbRO4JO5Xo1A) and say hi in #cacao-roaster.
-
-## License
-
-This project is licensed under the Apache 2.0 License - see the [LICENSE.md](LICENSE.md) file for details
-
-# Governance
-
-[Open Project name] operates under the terms of the [Open Project Rules](https://www.oasis-open.org/policies-guidelines/open-projects-process) and the applicable license(s) specified in [LICENSE.md](LICENSE.md). Further details can be found in [GOVERNANCE.md](GOVERNANCE.md).
-
-# CLA & Non-assert signatures required
-
-All technical contributions must be covered by a Contributor's License Agreement. This requirement allows our work to advance through OASIS standards development stages and potentially be submitted to de jure organizations such as ISO. You will get a prompt to sign this document when you submit your first pull request to a project repository, or you can sign [here](https://www.oasis-open.org/open-projects/cla/oasis-open-projects-individual-contributor-license-agreement-i-cla/). If you are contributing on behalf of your employer, you must also sign the ECLA [here](https://www.oasis-open.org/open-projects/cla/entity-cla-20210630/).
