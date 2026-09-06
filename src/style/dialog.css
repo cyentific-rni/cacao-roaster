@@ -86,6 +86,83 @@
   font-weight: 200;
 }
 
+.stix-chooser-dialog {
+  width: min(1200px, 94vw);
+  max-width: 1200px;
+  padding: 0;
+  background: rgb(43, 44, 63);
+  border-radius: 18px;
+  border: 1px solid rgba(122, 123, 170, 0.7);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
+}
+
+.stix-chooser-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-family: Poppins, sans-serif;
+  color: white;
+  background: rgba(60, 61, 92, 0.35);
+}
+
+.stix-chooser-table th,
+.stix-chooser-table td {
+  padding: 18px 20px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.stix-chooser-table th {
+  background: rgba(30, 31, 50, 0.9);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ececff;
+}
+
+.stix-chooser-row {
+  background: transparent !important;
+  cursor: pointer;
+}
+
+.stix-chooser-row td {
+  background: transparent !important;
+}
+
+.stix-chooser-row:hover {
+  background: rgba(142, 117, 255, 0.15) !important;
+}
+
+.stix-chooser-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px 18px;
+}
+
+.stix-chooser-actions .buttonList__button {
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.stix-chooser-actions .button--primary {
+  background: rgba(142, 117, 255, 0.18);
+  color: #fff;
+  border: 1px solid rgba(170, 145, 255, 0.7);
+}
+
+.stix-chooser-actions .button--secondary {
+  background: transparent;
+  color: #fff;
+  border: 0;
+}
+
 .cacaoDialog__labels > .property--simple {
   display: flex;
 }

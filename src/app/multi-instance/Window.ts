@@ -612,6 +612,8 @@ export default class CacaoWindow {
 	private showMultiPlaybookDialog(candidates: PlaybookCandidate[]) {
 		const dialog = document.createElement('dialog') as HTMLDialogElement;
 		dialog.className = 'dialog stix-chooser-dialog';
+		dialog.style.outline = 'none';
+		dialog.style.border = 'none';
 		this._container.appendChild(dialog);
 
 		const title = document.createElement('div');
@@ -624,19 +626,55 @@ export default class CacaoWindow {
 		description.textContent = `Found ${candidates.length} CACAO playbooks in this STIX bundle.`;
 		dialog.appendChild(description);
 
-		const select = document.createElement('select');
-		select.style.width = '100%';
-		select.style.margin = '12px 0';
+		const table = document.createElement('table');
+		table.className = 'stix-chooser-table';
 
-		candidates.forEach((candidate, index) => {
-			const option = document.createElement('option');
-			option.value = String(index);
-			//if playbook has no name, use an index
-			option.textContent = candidate.name ?? `Playbook ${index + 1}`;
-			select.appendChild(option);
+		const thead = document.createElement('thead');
+		const headRow = document.createElement('tr');
+		['Name', 'Type', 'Labels'].forEach(label => {
+			const th = document.createElement('th');
+			th.textContent = label;
+			headRow.appendChild(th);
 		});
+		thead.appendChild(headRow);
+		table.appendChild(thead);
 
-		dialog.appendChild(select);
+		const tbody = document.createElement('tbody');
+		candidates.forEach((candidate, index) => {
+			const row = document.createElement('tr');
+			row.className = 'stix-chooser-row';
+			row.style.background = 'transparent';
+			row.style.outline = 'none';
+			row.style.boxShadow = 'none';
+
+			row.onclick = () => {
+				const window = this._app.newWindow();
+				window.loadEditor(new Playbook(candidate.playbook));
+				this._app.openWindow(window);
+				const button = this._container.querySelector('.button--open') as HTMLElement | null;
+				if (button) {
+					button.classList.remove('entry--disable');
+					button.style.pointerEvents = '';
+				}
+			};
+
+			const nameCell = document.createElement('td');
+			nameCell.textContent = candidate.name ?? `Playbook ${index + 1}`;
+			const typeCell = document.createElement('td');
+			typeCell.textContent = candidate.playbook?.type ?? 'playbook';
+			const labelCell = document.createElement('td');
+			const labels = Array.isArray(candidate.playbook?.labels)
+				? candidate.playbook.labels.join(', ')
+				: '';
+			labelCell.textContent = labels || '—';
+
+			row.appendChild(nameCell);
+			row.appendChild(typeCell);
+			row.appendChild(labelCell);
+			tbody.appendChild(row);
+		});
+		table.appendChild(tbody);
+		dialog.appendChild(table);
 
 		const buttonContainer = document.createElement('div');
 		buttonContainer.className = 'stix-chooser-actions';
@@ -647,20 +685,6 @@ export default class CacaoWindow {
 				button.classList.remove('entry--disable');
 				button.style.pointerEvents = '';
 			}
-		};
-
-		const openSelected = document.createElement('button');
-		openSelected.className = 'buttonList__button button--primary';
-		openSelected.textContent = 'Open selected playbook';
-
-		openSelected.onclick = () => {
-			const selectedIndex = Number(select.value);
-			const window = this._app.newWindow();
-			window.loadEditor(new Playbook(candidates[selectedIndex].playbook));
-			this._app.openWindow(window);
-			resetImportButtonState();
-			//dialog.close();
-			//dialog.remove();
 		};
 
 		const openAllPlaybooks = document.createElement('button');
@@ -674,8 +698,6 @@ export default class CacaoWindow {
 				this._app.openWindow(window);
 			}
 			resetImportButtonState();
-			dialog.close();
-			//dialog.remove();
 		};
 
 		const cancel = document.createElement('button');
@@ -688,10 +710,9 @@ export default class CacaoWindow {
 			dialog.remove();
 		};
 
-		buttonContainer.appendChild(openSelected);
 		buttonContainer.appendChild(openAllPlaybooks);
 		buttonContainer.appendChild(cancel);
-		dialog.append(buttonContainer);
+		dialog.appendChild(buttonContainer);
 
 		dialog.showModal();
 	}
