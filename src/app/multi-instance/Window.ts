@@ -13,7 +13,6 @@ export default class CacaoWindow {
 	private _app: MultiInstanceApplication;
 	private _editor!: CacaoEditor;
 	private _container: HTMLElement;
-	private _stixChooserDialog?: HTMLDialogElement;
 	static $inject: string[];
 
 	constructor(app: MultiInstanceApplication) {
@@ -35,17 +34,11 @@ export default class CacaoWindow {
 	show() {
 		this._headerEntry.classList.add('tab-open');
 		this._app.currentWindow = this._container;
-		if (this._stixChooserDialog && !this._stixChooserDialog.open) {
-			this._stixChooserDialog.showModal();
-		}
 	}
 
 	hide() {
 		this._headerEntry.classList.remove('tab-open');
 		this._closeLogWindow();
-		if (this._stixChooserDialog && this._stixChooserDialog.open) {
-			this._stixChooserDialog.close();
-		}
 	}
 
 	/* Closes the log window by removing the 'show' class and adding the 'hide' class.
@@ -617,20 +610,9 @@ export default class CacaoWindow {
 
 	//Popup dialog for when STIX bundle contains more than one valid embedded CACAO playbook 
 	private showMultiPlaybookDialog(candidates: PlaybookCandidate[]) {
-		if (this._stixChooserDialog) {
-			if (!this._stixChooserDialog.isConnected) {
-				document.body.appendChild(this._stixChooserDialog);
-			}
-			if (!this._stixChooserDialog.open) {
-				this._stixChooserDialog.showModal();
-			}
-			return;
-		}
-
 		const dialog = document.createElement('dialog') as HTMLDialogElement;
 		dialog.className = 'dialog stix-chooser-dialog';
-		this._stixChooserDialog = dialog;
-		document.body.appendChild(dialog);
+		this._container.appendChild(dialog);
 
 		const title = document.createElement('div');
 		title.className = 'cacaoDialog__title';
@@ -642,54 +624,19 @@ export default class CacaoWindow {
 		description.textContent = `Found ${candidates.length} CACAO playbooks in this STIX bundle.`;
 		dialog.appendChild(description);
 
-		const tableWrapper = document.createElement('div');
-		tableWrapper.className = 'stix-chooser-table-wrapper';
+		const select = document.createElement('select');
+		select.style.width = '100%';
+		select.style.margin = '12px 0';
 
-		const table = document.createElement('table');
-		table.className = 'stix-chooser-table';
-
-		const thead = document.createElement('thead');
-		const headerRow = document.createElement('tr');
-		['Name', 'Type', 'Labels'].forEach((label) => {
-			const th = document.createElement('th');
-			th.textContent = label;
-			headerRow.appendChild(th);
-		});
-		thead.appendChild(headerRow);
-		table.appendChild(thead);
-
-		const tbody = document.createElement('tbody');
 		candidates.forEach((candidate, index) => {
-			const row = document.createElement('tr');
-			row.className = 'stix-chooser-row';
-			row.title = 'Open this playbook in the editor';
-
-			const nameCell = document.createElement('td');
-			nameCell.textContent = candidate.name ?? `Playbook ${index + 1}`;
-
-			const typeCell = document.createElement('td');
-			typeCell.textContent = candidate.playbook?.type ?? 'playbook';
-
-			const labelsCell = document.createElement('td');
-			const labels = Array.isArray(candidate.playbook?.labels) ? candidate.playbook.labels : [];
-			labelsCell.textContent = labels.length > 0 ? labels.join(', ') : '—';
-
-			row.appendChild(nameCell);
-			row.appendChild(typeCell);
-			row.appendChild(labelsCell);
-
-			row.onclick = () => {
-				const window = this._app.newWindow();
-				window.loadEditor(new Playbook(candidate.playbook));
-				this._app.openWindow(window);
-				dialog.close();
-			};
-
-			tbody.appendChild(row);
+			const option = document.createElement('option');
+			option.value = String(index);
+			//if playbook has no name, use an index
+			option.textContent = candidate.name ?? `Playbook ${index + 1}`;
+			select.appendChild(option);
 		});
-		table.appendChild(tbody);
-		tableWrapper.appendChild(table);
-		dialog.appendChild(tableWrapper);
+
+		dialog.appendChild(select);
 
 		const buttonContainer = document.createElement('div');
 		buttonContainer.className = 'stix-chooser-actions';
@@ -700,6 +647,20 @@ export default class CacaoWindow {
 				button.classList.remove('entry--disable');
 				button.style.pointerEvents = '';
 			}
+		};
+
+		const openSelected = document.createElement('button');
+		openSelected.className = 'buttonList__button button--primary';
+		openSelected.textContent = 'Open selected playbook';
+
+		openSelected.onclick = () => {
+			const selectedIndex = Number(select.value);
+			const window = this._app.newWindow();
+			window.loadEditor(new Playbook(candidates[selectedIndex].playbook));
+			this._app.openWindow(window);
+			resetImportButtonState();
+			//dialog.close();
+			//dialog.remove();
 		};
 
 		const openAllPlaybooks = document.createElement('button');
@@ -714,6 +675,7 @@ export default class CacaoWindow {
 			}
 			resetImportButtonState();
 			dialog.close();
+			//dialog.remove();
 		};
 
 		const cancel = document.createElement('button');
@@ -723,8 +685,10 @@ export default class CacaoWindow {
 		cancel.onclick = () => {
 			resetImportButtonState();
 			dialog.close();
+			dialog.remove();
 		};
 
+		buttonContainer.appendChild(openSelected);
 		buttonContainer.appendChild(openAllPlaybooks);
 		buttonContainer.appendChild(cancel);
 		dialog.append(buttonContainer);
