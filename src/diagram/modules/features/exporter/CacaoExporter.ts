@@ -173,66 +173,11 @@ export default class CacaoExporter {
 			this._playbookHandler.playbook,
 			coaID,
 		);
-		
-		try {
-        this.validateStixEnvelopeForExport(stixPlaybook);
-    } catch (error) {
-        console.error('STIX export validation failed:', error);
-        return;
-    }
-
 		// Remove properties with no values
 		stixPlaybook = CacaoUtils.filterEmptyValues(stixPlaybook);
 
 		// Download the JSON file
 		this.downloadFile(JSON.stringify(stixPlaybook, null, 2), fileName, 'application/json');
-	}
-
-	private validateStixEnvelopeForExport(stixEnvelope: unknown): void {
-		if (!stixEnvelope || typeof stixEnvelope !== 'object' || Array.isArray(stixEnvelope)) {
-			throw new Error('STIX export envelope is invalid.');
-		}
-
-		const envelope = stixEnvelope as Record<string, unknown>;
-		const objects = Array.isArray(envelope.objects) ? envelope.objects : [];
-		const primaryObject = objects[0];
-
-		if (!primaryObject || typeof primaryObject !== 'object' || Array.isArray(primaryObject)) {
-			throw new Error('STIX export missing the primary object.');
-		}
-
-		const extensionMap =
-			typeof (primaryObject as Record<string, unknown>).extensions === 'object'
-				? ((primaryObject as Record<string, unknown>).extensions as Record<string, unknown>)
-				: {};
-		const extensionKey = Object.keys(extensionMap)[0];
-		const extension = extensionKey ? extensionMap[extensionKey] : undefined;
-
-		if (!extension || typeof extension !== 'object') {
-			throw new Error('STIX extension metadata is missing.');
-		}
-
-		//checks STIX extension_type, created and modified timestamps before export
-		const extensionData = extension as Record<string, unknown>;
-
-		if (extensionData.extension_type !== 'property-extension') {
-			throw new Error('STIX extension_type must be property-extension.');
-		}
-
-		const hasValidCreatedDate =
-			typeof extensionData.created === 'string' &&
-			!Number.isNaN(Date.parse(extensionData.created));
-		const hasValidModifiedDate =
-			typeof extensionData.modified === 'string' &&
-			!Number.isNaN(Date.parse(extensionData.modified));
-
-		if (!hasValidCreatedDate) {
-			throw new Error('STIX extension created timestamp is invalid.');
-		}
-
-		if (!hasValidModifiedDate) {
-			throw new Error('STIX extension modified timestamp is invalid.');
-		}
 	}
 
 	// Creates a STIX 2.1 Course of Action object with the Playbook extension and attaches the relevant metadata and the whole CACAO playbook in base64 in the "playbook_base64" property.
