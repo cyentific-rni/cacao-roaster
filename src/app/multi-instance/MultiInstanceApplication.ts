@@ -63,7 +63,7 @@ export default class MultiInstanceApplication extends Application {
 		header.appendChild(add);
 	}
 
-	private newWindow(): CacaoWindow {
+	newWindow(): CacaoWindow {
 		const window = new CacaoWindow(this);
 		this._windows.push(window);
 		this.addHeaderTab(window.headerTabEntry);

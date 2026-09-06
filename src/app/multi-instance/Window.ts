@@ -13,6 +13,7 @@ export default class CacaoWindow {
 	private _app: MultiInstanceApplication;
 	private _editor!: CacaoEditor;
 	private _container: HTMLElement;
+	private _stixChooserDialog?: HTMLDialogElement;
 	static $inject: string[];
 
 	constructor(app: MultiInstanceApplication) {
@@ -34,11 +35,17 @@ export default class CacaoWindow {
 	show() {
 		this._headerEntry.classList.add('tab-open');
 		this._app.currentWindow = this._container;
+		if (this._stixChooserDialog && !this._stixChooserDialog.open) {
+			this._stixChooserDialog.showModal();
+		}
 	}
 
 	hide() {
 		this._headerEntry.classList.remove('tab-open');
 		this._closeLogWindow();
+		if (this._stixChooserDialog && this._stixChooserDialog.open) {
+			this._stixChooserDialog.close();
+		}
 	}
 
 	/* Closes the log window by removing the 'show' class and adding the 'hide' class.
@@ -55,6 +62,10 @@ export default class CacaoWindow {
 	private initPage() {
 		const logo = document.createElement('div');
 		logo.className = 'window__logo';
+
+		const complianceBadge = document.createElement('div');
+		complianceBadge.className = 'window__compliance-badge';
+		complianceBadge.textContent = 'CACAO v2 compliant';
 
 		const primaryButtonContainer = document.createElement('div');
 		primaryButtonContainer.className = 'window__buttoncontainer';
@@ -108,6 +119,7 @@ export default class CacaoWindow {
 		primaryButtonContainer.appendChild(newButton);
 		primaryButtonContainer.appendChild(openButton);
 		primaryButtonContainer.appendChild(textImport);
+		this._container.appendChild(complianceBadge);
 		this._container.appendChild(primaryButtonContainer);
 		this._container.appendChild(settingsButton);
 		this._container.className = 'picker-window';
@@ -374,6 +386,27 @@ export default class CacaoWindow {
 				
 				// Parses the plaintext to JSON format
 				const playbookJson = JSON.parse(playbook);
+
+				// STIX bundle detection
+				if (playbookJson && playbookJson.type === 'bundle') {
+					validateImportedStixBundle(playbookJson);
+					const candidates = collectPlayboksFromStix(playbookJson);
+
+
+					if (candidates.length === 1) {
+						this.loadEditor(new Playbook(candidates[0].playbook));
+						this._removeLoadingModal(loadingElements);
+						return;
+						}
+						if (candidates.length > 1) {
+						this.showMultiPlaybookDialog(candidates);
+						this._removeLoadingModal(loadingElements);
+						return;
+					}
+
+					this._removeLoadingModal(loadingElements);
+					throw new Error('STIX bundle is valid, but it contains no embedded CACAO playbook');
+				}
 				
 				// Stage 3: Import playbook
 				this._updateLoadingMessage(loadingElements.modal, 'Importing playbook...');
@@ -465,7 +498,8 @@ export default class CacaoWindow {
 					document.body.style.filter = 'none';
 					
 					// Find the openButton to update its visual state
-					const openButton = document.querySelector('.button--open');
+					//check!
+					const openButton = this._container.querySelector('.button--open') as HTMLElement | null;
 					
 					// Only disable the clicked button, not all buttons
 					if (openButton) {
@@ -501,6 +535,28 @@ export default class CacaoWindow {
 							await new Promise(resolve => setTimeout(resolve, 500));
 							
 							const jsonFile = JSON.parse(fileContent);
+
+							//if the import is a STIX bundle, scan it for embedded playbook_bins values
+							if (jsonFile && jsonFile.type === 'bundle') {
+								validateImportedStixBundle(jsonFile);
+								const candidates = collectPlayboksFromStix(jsonFile);
+
+								if (candidates.length === 1) {
+									this.loadEditor(new Playbook(candidates[0].playbook));
+									this._removeLoadingModal(loadingElements);
+									return;
+								}
+
+								if (candidates.length > 1) {
+									this.showMultiPlaybookDialog(candidates);
+									this._removeLoadingModal(loadingElements);
+									return;
+								}
+
+								this._removeLoadingModal(loadingElements);
+								throw new Error('STIX bundle is valid, but it contains no embedded CACAO playbook');
+								}
+
 							
 							// Stage 3: Import playbook
 							this._updateLoadingMessage(loadingElements.modal, 'Importing playbook...');
@@ -557,6 +613,123 @@ export default class CacaoWindow {
 			false,
 		);
 		fileInput.click();
+	}
+
+	//Popup dialog for when STIX bundle contains more than one valid embedded CACAO playbook 
+	private showMultiPlaybookDialog(candidates: PlaybookCandidate[]) {
+		if (this._stixChooserDialog) {
+			if (!this._stixChooserDialog.isConnected) {
+				document.body.appendChild(this._stixChooserDialog);
+			}
+			if (!this._stixChooserDialog.open) {
+				this._stixChooserDialog.showModal();
+			}
+			return;
+		}
+
+		const dialog = document.createElement('dialog') as HTMLDialogElement;
+		dialog.className = 'dialog stix-chooser-dialog';
+		this._stixChooserDialog = dialog;
+		document.body.appendChild(dialog);
+
+		const title = document.createElement('div');
+		title.className = 'cacaoDialog__title';
+		title.textContent = 'Multiple CACAO Playbooks Found';
+		dialog.appendChild(title);
+
+		const description = document.createElement('div');
+		description.className = 'cacaoDialog__description';
+		description.textContent = `Found ${candidates.length} CACAO playbooks in this STIX bundle.`;
+		dialog.appendChild(description);
+
+		const tableWrapper = document.createElement('div');
+		tableWrapper.className = 'stix-chooser-table-wrapper';
+
+		const table = document.createElement('table');
+		table.className = 'stix-chooser-table';
+
+		const thead = document.createElement('thead');
+		const headerRow = document.createElement('tr');
+		['Name', 'Type', 'Labels'].forEach((label) => {
+			const th = document.createElement('th');
+			th.textContent = label;
+			headerRow.appendChild(th);
+		});
+		thead.appendChild(headerRow);
+		table.appendChild(thead);
+
+		const tbody = document.createElement('tbody');
+		candidates.forEach((candidate, index) => {
+			const row = document.createElement('tr');
+			row.className = 'stix-chooser-row';
+			row.title = 'Open this playbook in the editor';
+
+			const nameCell = document.createElement('td');
+			nameCell.textContent = candidate.name ?? `Playbook ${index + 1}`;
+
+			const typeCell = document.createElement('td');
+			typeCell.textContent = candidate.playbook?.type ?? 'playbook';
+
+			const labelsCell = document.createElement('td');
+			const labels = Array.isArray(candidate.playbook?.labels) ? candidate.playbook.labels : [];
+			labelsCell.textContent = labels.length > 0 ? labels.join(', ') : '—';
+
+			row.appendChild(nameCell);
+			row.appendChild(typeCell);
+			row.appendChild(labelsCell);
+
+			row.onclick = () => {
+				const window = this._app.newWindow();
+				window.loadEditor(new Playbook(candidate.playbook));
+				this._app.openWindow(window);
+				dialog.close();
+			};
+
+			tbody.appendChild(row);
+		});
+		table.appendChild(tbody);
+		tableWrapper.appendChild(table);
+		dialog.appendChild(tableWrapper);
+
+		const buttonContainer = document.createElement('div');
+		buttonContainer.className = 'stix-chooser-actions';
+
+		const resetImportButtonState = () => {
+			const button = this._container.querySelector('.button--open') as HTMLElement | null;
+			if (button) {
+				button.classList.remove('entry--disable');
+				button.style.pointerEvents = '';
+			}
+		};
+
+		const openAllPlaybooks = document.createElement('button');
+		openAllPlaybooks.className = 'buttonList__button button--primary';
+		openAllPlaybooks.textContent = 'Open all playbooks in separate tabs';
+
+		openAllPlaybooks.onclick = () => {
+			for (const candidate of candidates) {
+				const window = this._app.newWindow();
+				window.loadEditor(new Playbook(candidate.playbook));
+				this._app.openWindow(window);
+			}
+			resetImportButtonState();
+			dialog.close();
+		};
+
+		const cancel = document.createElement('button');
+		cancel.className = 'buttonList__button button--secondary';
+		cancel.textContent = 'Cancel';
+
+		cancel.onclick = () => {
+			resetImportButtonState();
+			dialog.close();
+		};
+
+		buttonContainer.appendChild(openAllPlaybooks);
+		buttonContainer.appendChild(cancel);
+		dialog.append(buttonContainer);
+
+		dialog.showModal();
 	}
 
 	private loadEditor(playbook: Playbook | undefined = undefined, status?: ExecutionStatus) {
@@ -616,6 +789,129 @@ export default class CacaoWindow {
 
 		return entry;
 	}
+}
+
+type PlaybookCandidate = {
+	path: string;
+	objectId?: string;
+	name?: string;
+	playbook: any;
+};
+
+function iteratePlaybookBins(value: any, path = '$'): Array<[string, string]>{
+	const result: Array<[string, string]> = [];
+
+	if (value && typeof value === 'object') {
+		if (Array.isArray(value)) {
+			value.forEach((item, index) => {
+				result.push(...iteratePlaybookBins(item, `${path}[${index}]`));
+			});
+			return result;
+		}
+
+		for (const key of Object.keys(value)) {
+			const child = value[key];
+			const nextPath = `${path}.${key}`;
+
+			if (key === 'playbook_bin' && typeof child === 'string') {
+				result.push([nextPath, child]);
+			} else {
+				result.push(...iteratePlaybookBins(child, nextPath));
+			}
+		}
+	}
+	return result;
+}
+
+function validateImportedStixBundle(value: any): void {
+    if (!value || typeof value !== 'object' || value.type !== 'bundle') {
+        throw new Error('The imported STIX object is not a bundle');
+    }
+
+    if (!Array.isArray(value.objects)) {
+        throw new Error('STIX bundle is missing an objects array');
+    }
+
+    let foundValidExtension = false;
+
+    for (const obj of value.objects) {
+        if (!obj || typeof obj !== 'object') continue;
+
+        if (!obj.created || typeof obj.created !== 'string') {
+            throw new Error('STIX object is missing created');
+        }
+
+        if (!obj.modified || typeof obj.modified !== 'string') {
+            throw new Error('STIX object is missing modified');
+        }
+
+        const extensions = obj.extensions ?? {};
+        for (const ext of Object.values(extensions)) {
+            const candidate = ext as { extension_type?: unknown };
+            if (candidate.extension_type === 'property-extension') {
+                foundValidExtension = true;
+            }
+        }
+    }
+
+    if (!foundValidExtension) {
+        throw new Error('STIX bundle does not contain any valid extension objects');
+    }
+}
+
+function decodePlaybookBin(playbookBin: string): any {
+	const base64 = playbookBin.replace(/\s+/g, '');
+	const padded = base64 + '='.repeat((-base64.length) % 4);
+
+	let decodedText: string;
+	if (typeof window !== 'undefined' && typeof window.atob === 'function') {
+		decodedText = window.atob(padded);
+	} else {
+		decodedText = atob(padded);
+	}
+
+	const parsed = JSON.parse(decodedText);
+
+	if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+		//decoded playbook is JSON, but it is not an object
+		throw new Error('Decoded playbook_bin is not a valid JSON object');
+	}
+	
+	if (parsed.type !== 'playbook') {
+		throw new Error('Decoded playbook_bin is not a CACAO playbook');
+	}
+
+	if (!parsed.spec_version || !String(parsed.spec_version).startsWith('cacao-')) {
+		throw new Error('decoded JSON does not look like a CACAO playbook: missing CACAO spec_version')
+
+	}
+
+	if (!parsed.id) {
+		throw new Error('decoded JSON does not look like a CACAO playbook: missing id');
+	}
+
+	return parsed;
+}
+
+function collectPlayboksFromStix(value: any): PlaybookCandidate[] {
+	const candidates: PlaybookCandidate[] = [];
+
+	for (const [path, playbookBin] of iteratePlaybookBins(value)) {
+		try {
+			const playbook = decodePlaybookBin(playbookBin);
+			candidates.push({
+			path,
+			objectId: value?.id ?? undefined,
+			name: value?.name ?? undefined,
+			playbook,
+			});
+		} catch (err: any) {
+			//if invalid playbook_bin values, warn in the console (invalid Base64, not decoded to redeable text, text is not valid JSON, JSON not an object)
+			console.warn(`Invalid playbook_bin at ${path}:`, err.message);
+		}
+	}
+
+	return candidates;
 }
 
 function fileIsJSON(file: File): boolean {
