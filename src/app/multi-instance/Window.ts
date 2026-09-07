@@ -71,7 +71,7 @@ export default class CacaoWindow {
         <p class="button__label">Create</p>
         `;
 		newButton.onclick = () => {
-			this.loadEditor();
+			this.openPlaybookInNewTab(newPlaybook());
 		};
 
 		// Button for uploading a CACAO JSON file from local machine.
@@ -387,7 +387,7 @@ export default class CacaoWindow {
 
 
 					if (candidates.length === 1) {
-						this.loadEditor(new Playbook(candidates[0].playbook));
+						this.openPlaybookInNewTab(new Playbook(candidates[0].playbook));
 						this._removeLoadingModal(loadingElements);
 						return;
 						}
@@ -407,7 +407,7 @@ export default class CacaoWindow {
 				
 				// Checks if the JSON is a CACAO playbook and loads the editor
 				if (isCacaoPlaybook(playbookJson)) {
-					this.loadEditor(new Playbook(playbookJson));
+					this.openPlaybookInNewTab(new Playbook(playbookJson));
 					this._removeLoadingModal(loadingElements);
 				} else {
 					this._removeLoadingModal(loadingElements);
@@ -535,7 +535,11 @@ export default class CacaoWindow {
 								const candidates = collectPlayboksFromStix(jsonFile);
 
 								if (candidates.length === 1) {
-									this.loadEditor(new Playbook(candidates[0].playbook));
+									this.openPlaybookInNewTab(new Playbook(candidates[0].playbook));
+									if (openButton) {
+										openButton.classList.remove('entry--disable');
+										openButton.style.pointerEvents = '';
+									}
 									this._removeLoadingModal(loadingElements);
 									return;
 								}
@@ -556,7 +560,7 @@ export default class CacaoWindow {
 							await new Promise(resolve => setTimeout(resolve, 500));
 							
 							if (isCacaoPlaybook(jsonFile)) {
-								this.loadEditor(new Playbook(jsonFile));
+								this.openPlaybookInNewTab(new Playbook(jsonFile));
 								this._removeLoadingModal(loadingElements);
 								
 								// Re-enable button after successful import
@@ -568,7 +572,7 @@ export default class CacaoWindow {
 								jsonFile.playbook !== undefined &&
 								isCacaoPlaybook(jsonFile.playbook)
 							) {
-								this.loadEditor(
+								this.openPlaybookInNewTab(
 									new Playbook(jsonFile.playbook),
 									jsonFile.execution_status,
 								);
@@ -648,9 +652,7 @@ export default class CacaoWindow {
 			row.style.boxShadow = 'none';
 
 			row.onclick = () => {
-				const window = this._app.newWindow();
-				window.loadEditor(new Playbook(candidate.playbook));
-				this._app.openWindow(window);
+				this.openPlaybookInNewTab(new Playbook(candidate.playbook));
 				const button = this._container.querySelector('.button--open') as HTMLElement | null;
 				if (button) {
 					button.classList.remove('entry--disable');
@@ -693,9 +695,7 @@ export default class CacaoWindow {
 
 		openAllPlaybooks.onclick = () => {
 			for (const candidate of candidates) {
-				const window = this._app.newWindow();
-				window.loadEditor(new Playbook(candidate.playbook));
-				this._app.openWindow(window);
+				this.openPlaybookInNewTab(new Playbook(candidate.playbook));
 			}
 			resetImportButtonState();
 		};
@@ -715,6 +715,12 @@ export default class CacaoWindow {
 		dialog.appendChild(buttonContainer);
 
 		dialog.showModal();
+	}
+
+	private openPlaybookInNewTab(playbook: Playbook, status?: ExecutionStatus): void {
+		const window = this._app.newWindow();
+		window.loadEditor(playbook, status);
+		this._app.openWindow(window);
 	}
 
 	private loadEditor(playbook: Playbook | undefined = undefined, status?: ExecutionStatus) {
