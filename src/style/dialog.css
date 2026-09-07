@@ -96,6 +96,10 @@
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
 }
 
+.stix-chooser-dialog .cacaoDialog__title {
+  font-size: 28px;
+}
+
 .stix-chooser-table {
   width: 100%;
   border-collapse: collapse;
@@ -134,7 +138,6 @@
 
 .stix-chooser-row:hover {
   background: var(--select) !important;
-  opacity: 0.8;
 }
 
 .stix-chooser-actions {
