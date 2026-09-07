@@ -622,12 +622,12 @@ export default class CacaoWindow {
 
 		const title = document.createElement('div');
 		title.className = 'cacaoDialog__title';
-		title.textContent = 'Multiple CACAO Playbooks Found';
+		title.textContent = `${candidates.length} CACAO Playbooks Found`;
 		dialog.appendChild(title);
 
 		const description = document.createElement('div');
 		description.className = 'cacaoDialog__description';
-		description.textContent = `Found ${candidates.length} CACAO playbooks in this STIX bundle.`;
+		description.textContent = 'Choose a playbook';
 		dialog.appendChild(description);
 
 		const table = document.createElement('table');
