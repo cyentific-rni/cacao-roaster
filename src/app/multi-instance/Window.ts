@@ -676,6 +676,12 @@ export default class CacaoWindow {
 			tbody.appendChild(row);
 		});
 		table.appendChild(tbody);
+		if (candidates.length > 5) {
+			dialog.classList.add('stix-chooser-dialog--scrollable');
+			table.classList.add('stix-chooser-table--scrollable');
+			tbody.tabIndex = 0;
+			tbody.setAttribute('aria-label', 'Available CACAO playbooks');
+		}
 		dialog.appendChild(table);
 
 		const buttonContainer = document.createElement('div');

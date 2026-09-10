@@ -100,6 +100,56 @@
   font-size: 28px;
 }
 
+.stix-chooser-dialog--scrollable {
+  overflow: hidden;
+}
+
+.stix-chooser-dialog--scrollable > .cacaoDialog__title,
+.stix-chooser-dialog--scrollable > .cacaoDialog__description,
+.stix-chooser-dialog--scrollable > .stix-chooser-actions {
+  flex-shrink: 0;
+}
+
+.stix-chooser-table--scrollable {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.stix-chooser-table--scrollable thead {
+  display: block;
+  flex-shrink: 0;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  /* Use one opaque background and border across the header and its gutter. */
+  background: rgb(32, 33, 53);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.stix-chooser-table--scrollable thead th {
+  background: transparent;
+  border-bottom: 0;
+}
+
+.stix-chooser-table--scrollable tbody {
+  display: block;
+  min-height: 0;
+  max-height: 290px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.stix-chooser-table--scrollable tr {
+  display: grid;
+  grid-template-columns: minmax(0, 18fr) minmax(0, 16fr) minmax(0, 66fr);
+}
+
+.stix-chooser-table--scrollable th,
+.stix-chooser-table--scrollable td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .stix-chooser-table {
   width: 100%;
   border-collapse: collapse;
