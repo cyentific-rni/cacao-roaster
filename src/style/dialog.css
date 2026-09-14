@@ -100,38 +100,35 @@
   font-size: 28px;
 }
 
-.stix-chooser-dialog--scrollable {
+.stix-chooser-dialog-scrollable {
   overflow: hidden;
 }
 
-.stix-chooser-dialog--scrollable > .cacaoDialog__title,
-.stix-chooser-dialog--scrollable > .cacaoDialog__description,
-.stix-chooser-dialog--scrollable > .stix-chooser-actions {
+.stix-chooser-dialog-scrollable > .cacaoDialog__title,
+.stix-chooser-dialog-scrollable > .cacaoDialog__description,
+.stix-chooser-dialog-scrollable > .stix-chooser-actions {
   flex-shrink: 0;
 }
 
-.stix-chooser-table--scrollable {
+.stix-chooser-table-scrollable {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-.stix-chooser-table--scrollable thead {
+.stix-chooser-table-scrollable thead {
   display: block;
   flex-shrink: 0;
-  overflow: hidden;
-  scrollbar-gutter: stable;
-  /* Use one opaque background and border across the header and its gutter. */
-  background: rgb(32, 33, 53);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.stix-chooser-table--scrollable thead th {
-  background: transparent;
-  border-bottom: 0;
+.stix-chooser-dialog-scrollable thead tr {
+  grid-template-columns:
+    calc((100% - var(--stix-scrollbar-width, 0px)) * 0.18)
+    calc((100% - var(--stix-scrollbar-width, 0px)) * 0.16)
+    minmax(0, 1fr);
 }
 
-.stix-chooser-table--scrollable tbody {
+.stix-chooser-table-scrollable tbody {
   display: block;
   min-height: 0;
   max-height: 290px;
@@ -139,13 +136,13 @@
   scrollbar-gutter: stable;
 }
 
-.stix-chooser-table--scrollable tr {
+.stix-chooser-table-scrollable tr {
   display: grid;
   grid-template-columns: minmax(0, 18fr) minmax(0, 16fr) minmax(0, 66fr);
 }
 
-.stix-chooser-table--scrollable th,
-.stix-chooser-table--scrollable td {
+.stix-chooser-table-scrollable th,
+.stix-chooser-table-scrollable td {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -182,10 +179,6 @@
   cursor: pointer;
 }
 
-.stix-chooser-row td {
-  background: transparent !important;
-}
-
 .stix-chooser-row:hover {
   background: var(--select) !important;
 }
@@ -220,24 +213,12 @@
 .stix-chooser-actions .button--secondary {
   background: transparent;
   color: #fff;
-  border: 0;
 }
 
-.stix-chooser-actions .button--primary:hover {
-  border: 1px solid blueviolet;
-  cursor: pointer;
-}
-
+.stix-chooser-actions .button--primary:hover,
 .stix-chooser-actions .button--secondary:hover {
-
   border: 1px solid blueviolet;
   cursor: pointer;
-}
-
-.stix-chooser-actions .button--primary,
-.stix-chooser-actions .button--secondary {
-  border: 1px solid transparent;
-  box-sizing: border-box;
 }
 
 .cacaoDialog__labels > .property--simple {
@@ -278,8 +259,8 @@
 .dialog__title {
   padding: 10px 15px;
   letter-spacing: 2px;
+  /*font-weight: 500;*/
   font-family: Poppins;
-  font-weight: 500;
   font-size: 25px;
   font-weight: 700;
 }
@@ -338,7 +319,7 @@
 .radioButtonLabelContainer {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  /*align-items: center;*/
   padding-left: 5px;
   align-items: baseline;
 }
@@ -402,6 +383,7 @@
 .error_message-div {
   display: flex;
   align-items: center;
+  height: 33px;
 }
 
 .error_message {
@@ -552,6 +534,3 @@
   justify-content: space-between;
 }
 
-.error_message-div {
-  height: 33px;
-}

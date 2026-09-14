@@ -382,23 +382,9 @@ export default class CacaoWindow {
 
 				// STIX bundle detection
 				if (playbookJson && playbookJson.type === 'bundle') {
-					validateImportedStixBundle(playbookJson);
-					const candidates = collectPlayboksFromStix(playbookJson);
-
-
-					if (candidates.length === 1) {
-						this.openPlaybookInNewTab(new Playbook(candidates[0].playbook));
-						this._removeLoadingModal(loadingElements);
-						return;
-						}
-						if (candidates.length > 1) {
-						this.showMultiPlaybookDialog(candidates);
-						this._removeLoadingModal(loadingElements);
-						return;
-					}
-
+					this.importStixBundle(playbookJson);
 					this._removeLoadingModal(loadingElements);
-					throw new Error('STIX bundle is valid, but it contains no embedded CACAO playbook');
+					return;
 				}
 				
 				// Stage 3: Import playbook
@@ -531,28 +517,10 @@ export default class CacaoWindow {
 
 							//if the import is a STIX bundle, scan it for embedded playbook_bins values
 							if (jsonFile && jsonFile.type === 'bundle') {
-								validateImportedStixBundle(jsonFile);
-								const candidates = collectPlayboksFromStix(jsonFile);
-
-								if (candidates.length === 1) {
-									this.openPlaybookInNewTab(new Playbook(candidates[0].playbook));
-									if (openButton) {
-										openButton.classList.remove('entry--disable');
-										openButton.style.pointerEvents = '';
-									}
-									this._removeLoadingModal(loadingElements);
-									return;
-								}
-
-								if (candidates.length > 1) {
-									this.showMultiPlaybookDialog(candidates);
-									this._removeLoadingModal(loadingElements);
-									return;
-								}
-
+								this.importStixBundle(jsonFile);
 								this._removeLoadingModal(loadingElements);
-								throw new Error('STIX bundle is valid, but it contains no embedded CACAO playbook');
-								}
+								return;
+							}
 
 							
 							// Stage 3: Import playbook
@@ -610,6 +578,30 @@ export default class CacaoWindow {
 			false,
 		);
 		fileInput.click();
+	}
+
+	private importStixBundle(bundle: unknown): void {
+		validateImportedStixBundle(bundle);
+		const candidates = collectPlayboksFromStix(bundle);
+
+		if (candidates.length === 0) {
+			throw new Error(
+				'STIX bundle is valid, but it contains no embedded CACAO playbook',
+			);
+		}
+		
+		if (candidates.length === 1){
+			this.openPlaybookInNewTab(new Playbook(candidates[0].playbook));
+
+			const button = this._container.querySelector('.button--open') as HTMLElement | null;
+			if (button) {
+				button.classList.remove('entry--disable');
+				button.style.pointerEvents = '';
+			}
+			return;
+		}
+
+		this.showMultiPlaybookDialog(candidates);
 	}
 
 	//Popup dialog for when STIX bundle contains more than one valid embedded CACAO playbook 
@@ -677,8 +669,8 @@ export default class CacaoWindow {
 		});
 		table.appendChild(tbody);
 		if (candidates.length > 5) {
-			dialog.classList.add('stix-chooser-dialog--scrollable');
-			table.classList.add('stix-chooser-table--scrollable');
+			dialog.classList.add('stix-chooser-dialog-scrollable');
+			table.classList.add('stix-chooser-table-scrollable');
 			tbody.tabIndex = 0;
 			tbody.setAttribute('aria-label', 'Available CACAO playbooks');
 		}
@@ -721,6 +713,28 @@ export default class CacaoWindow {
 		dialog.appendChild(buttonContainer);
 
 		dialog.showModal();
+
+		if (candidates.length > 5) {
+			const updateColumnWidths = () => {
+				const scrollbarWidth = tbody.offsetWidth - tbody.clientWidth;
+
+				table.style.setProperty(
+				'--stix-scrollbar-width',
+				`${scrollbarWidth}px`,
+				);
+			};
+
+			updateColumnWidths();
+
+			const resizeObserver = new ResizeObserver(updateColumnWidths);
+			resizeObserver.observe(tbody);
+
+			dialog.addEventListener(
+				'close',
+				() => resizeObserver.disconnect(),
+				{ once: true },
+			);
+		}
 	}
 
 	private openPlaybookInNewTab(playbook: Playbook, status?: ExecutionStatus): void {
