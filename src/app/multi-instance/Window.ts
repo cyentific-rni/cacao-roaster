@@ -395,6 +395,15 @@ export default class CacaoWindow {
 				if (isCacaoPlaybook(playbookJson)) {
 					this.openPlaybookInNewTab(new Playbook(playbookJson));
 					this._removeLoadingModal(loadingElements);
+				} else if (
+					playbookJson.playbook !== undefined &&
+					isCacaoPlaybook(playbookJson.playbook)
+				) {
+					this.openPlaybookInNewTab(
+						new Playbook(playbookJson.playbook),
+						playbookJson.execution_status,
+					);
+					this._removeLoadingModal(loadingElements);
 				} else {
 					this._removeLoadingModal(loadingElements);
 					throw new Error('The JSON imported is not a CACAO playbook');
